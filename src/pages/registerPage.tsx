@@ -16,15 +16,15 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 const RegisterPage = () => {
   const navigation = useNavigation<any>();
   type state = {
-    id: Number;
-    abbreviation: String;
-    name: String;
-    country_id: Number;
+    id: number;
+    abbreviation: string;
+    name: string;
+    country_id: number;
   };
   type country = {
-    id: Number;
-    name: String;
-    iso: String;
+    id: number;
+    name: string;
+    iso: string;
     states: state[];
   };
   type RegisterFormData = {
@@ -119,7 +119,6 @@ const RegisterPage = () => {
   }
   const registerBidder = async () => {
     try {
-      console.log(formData);
       if (await checkEmail(formData.email)) {
         const response = await fetch(
           'https://bidderapp.auctionmethod.com/amapi/register',

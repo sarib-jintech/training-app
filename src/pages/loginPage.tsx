@@ -4,10 +4,8 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import Entypo from 'react-native-vector-icons/Entypo';
 import { StyleSheet, TextInput, Text, Pressable, View } from 'react-native';
 import { UserContext } from '../utils/userContext';
-import { ThemeContext } from '../utils/themeContext';
 
 const LoginPage = () => {
-  const theme = useContext(ThemeContext);
   const { userEmail, setUserEmail } = useContext(UserContext);
   const navigation = useNavigation<any>();
   const [email, onChangeEmail] = useState('');

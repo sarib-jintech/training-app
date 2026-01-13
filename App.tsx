@@ -14,7 +14,6 @@ import Homepage from './src/pages/homePage';
 import AuctionItemPage from './src/pages/auctionItemPage';
 import { UserProvider } from './src/utils/userContext';
 import ChangePasswordPage from './src/pages/changePasswordPage';
-import { ThemeProvider } from './src/utils/themeContext';
 import BidHistory from './src/pages/bidHistory';
 import InvoicesPage from './src/pages/invoicesPage';
 import MyBidPage from './src/pages/myBidPage';
@@ -87,9 +86,7 @@ const App = () => {
   return (
     <SafeAreaProvider>
       <UserProvider>
-        <ThemeProvider>
           <Navigation />
-        </ThemeProvider>
       </UserProvider>
     </SafeAreaProvider>
   );
