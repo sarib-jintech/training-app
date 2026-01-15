@@ -3,40 +3,49 @@ import React, { useState } from 'react';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import ToastAlert from '../utils/toast';
 import { ALERT_TYPE } from 'react-native-alert-notification';
+import ValidateSingle from '../utils/validation';
 
 const ChangePasswordPage = () => {
   const [id, setId] = useState('');
   const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
   const authenticate = async () => {
-    try {
-      const response = await fetch(
-        'https://bidderapp.auctionmethod.com/amapi/auth/changepass',
-        {
-          method: 'POST',
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
+    if (
+      ValidateSingle(id) &&
+      ValidateSingle(password) &&
+      ValidateSingle(code)
+    ) {
+      try {
+        const response = await fetch(
+          'https://bidderapp.auctionmethod.com/amapi/auth/changepass',
+          {
+            method: 'POST',
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              id: id,
+              password: password,
+              code: code,
+            }),
           },
-          body: JSON.stringify({
-            id: id,
-            password: password,
-            code: code,
-          }),
-        },
-      );
-      const json = await response.json();
-      if (json.status == 'success') {
-        ToastAlert(
-          'Success',
-          ALERT_TYPE.SUCCESS,
-          'Password change successfully',
         );
-      } else {
-        ToastAlert('Error', ALERT_TYPE.DANGER, 'Password change fail');
+        const json = await response.json();
+        if (json.status == 'success') {
+          ToastAlert(
+            'Success',
+            ALERT_TYPE.SUCCESS,
+            'Password change successfully',
+          );
+        } else {
+          ToastAlert('Error', ALERT_TYPE.DANGER, 'Password change fail');
+        }
+      } catch (error) {
+        console.log(error);
       }
-    } catch (error) {
-      console.log(error);
+    } else {
+      ToastAlert('Error', ALERT_TYPE.WARNING, 'Fill all inputs');
     }
   };
   return (

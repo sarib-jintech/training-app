@@ -6,6 +6,7 @@ import { StyleSheet, TextInput, Text, Pressable, View } from 'react-native';
 import { UserContext } from '../utils/userContext';
 import { ALERT_TYPE } from 'react-native-alert-notification';
 import ToastAlert from '../utils/toast';
+import ValidateSingle from '../utils/validation';
 
 const LoginPage = () => {
   const { setUserEmail } = useContext(UserContext);
@@ -13,39 +14,43 @@ const LoginPage = () => {
   const [email, onChangeEmail] = useState('');
   const [password, onChangePassword] = useState('');
   const authenticate = async () => {
-    try {
-      const response = await fetch(
-        'https://bidderapp.auctionmethod.com/amapi/auth',
-        {
-          method: 'POST',
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
+    if (ValidateSingle(email) && ValidateSingle(password)) {
+      try {
+        const response = await fetch(
+          'https://bidderapp.auctionmethod.com/amapi/auth',
+          {
+            method: 'POST',
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              email: email,
+              password: password,
+            }),
           },
-          body: JSON.stringify({
-            email: email,
-            password: password,
-          }),
-        },
-      );
-      const json = await response.json();
-      console.log(json);
-      if (json.status == 'success') {
-        setUserEmail(email, json.token);
-        console.log(json.token);
-        ToastAlert(
-          'Success',
-          ALERT_TYPE.SUCCESS,
-          'Login successful, Redirecting to homepage',
         );
-        setTimeout(() => {
-          navigation.navigate('Homepage');
-        }, 2000);
-      } else if (json.status == 'error') {
-        ToastAlert('Error', ALERT_TYPE.WARNING, 'Login failed!');
+        const json = await response.json();
+        console.log(json);
+        if (json.status == 'success') {
+          setUserEmail(email, json.token);
+          console.log(json.token);
+          ToastAlert(
+            'Success',
+            ALERT_TYPE.SUCCESS,
+            'Login successful, Redirecting to homepage',
+          );
+          setTimeout(() => {
+            navigation.navigate('Homepage');
+          }, 2000);
+        } else if (json.status == 'error') {
+          ToastAlert('Error', ALERT_TYPE.WARNING, 'Login failed!');
+        }
+      } catch (error) {
+        console.log(error);
       }
-    } catch (error) {
-      console.log(error);
+    } else {
+      ToastAlert('Error', ALERT_TYPE.WARNING, 'Fill all inputs');
     }
   };
   return (

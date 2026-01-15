@@ -12,6 +12,7 @@ import { useNavigation } from '@react-navigation/native';
 import { UserContext } from './userContext';
 import { ALERT_TYPE } from 'react-native-alert-notification';
 import ToastAlert from './toast';
+import ValidateSingle from './validation';
 
 const AuctionItemCard = ({ item }: { item: any }) => {
   const navigator = useNavigation<any>();
@@ -94,32 +95,36 @@ const AuctionItemCard = ({ item }: { item: any }) => {
     }
   };
   const handleBid = async () => {
-    try {
-      const response = await fetch(
-        'https://bidderapp.auctionmethod.com/amapi/auctions/bids',
-        {
-          method: 'POST',
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
+    if (ValidateSingle(bid)) {
+      try {
+        const response = await fetch(
+          'https://bidderapp.auctionmethod.com/amapi/auctions/bids',
+          {
+            method: 'POST',
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              auctionid: item.auction_id,
+              itemid: item.id,
+              amount: parseFloat(bid),
+              terms_agreed: true,
+            }),
           },
-          body: JSON.stringify({
-            auctionid: item.auction_id,
-            itemid: item.id,
-            amount: parseFloat(bid),
-            terms_agreed: true,
-          }),
-        },
-      );
-      const json = await response.json();
-      if (json.status == 'success') {
-        ToastAlert('Success', ALERT_TYPE.SUCCESS, 'Bid added successfully');
-        setFavorite(false);
-      } else {
-        ToastAlert('Error', ALERT_TYPE.WARNING, 'Fail to add bid');
+        );
+        const json = await response.json();
+        if (json.status == 'success') {
+          ToastAlert('Success', ALERT_TYPE.SUCCESS, 'Bid added successfully');
+          setFavorite(false);
+        } else {
+          ToastAlert('Error', ALERT_TYPE.WARNING, 'Fail to add bid');
+        }
+      } catch (error) {
+        console.log(error);
       }
-    } catch (error) {
-      console.log(error);
+    }else{
+      ToastAlert('Error',ALERT_TYPE.WARNING,"Bid value is required");
     }
   };
   return (

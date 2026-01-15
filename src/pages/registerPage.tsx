@@ -74,7 +74,21 @@ const RegisterPage = () => {
     ship_country: 0,
     ship_residential: 0,
   });
-
+  const validateEmpty = () => {
+    for (const [key, value] of Object.entries(formData)) {
+      if(key=='ship_residential') continue;
+      if (
+        value === '' ||
+        value === 0 ||
+        value === null ||
+        value === undefined
+      ) {
+        console.log(key,value);
+        return false;
+      }
+    }
+    return true;
+  };
   useEffect(() => {
     const fetchInfo = async () => {
       try {
@@ -117,7 +131,10 @@ const RegisterPage = () => {
         },
       );
       const json = await response.json();
-      if (json.status == 'success') {
+      if (
+        json.status == 'success' &&
+        json.message == 'A user with this e-mail has already registered.'
+      ) {
         ToastAlert('Error', ALERT_TYPE.WARNING, 'User with same email exist');
         return false;
       } else {
@@ -131,19 +148,23 @@ const RegisterPage = () => {
   const registerBidder = async () => {
     try {
       if (await checkEmail(formData.email)) {
-        const response = await fetch(
-          'https://bidderapp.auctionmethod.com/amapi/register',
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(formData),
-          },
-        );
-        const json = await response.json();
-        if (json.status == 'success') {
-          ToastAlert('Success', ALERT_TYPE.SUCCESS, 'Form submitted');
+        if (validateEmpty()) {
+          const response = await fetch(
+            'https://bidderapp.auctionmethod.com/amapi/register',
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(formData),
+            },
+          );
+          const json = await response.json();
+          if (json.status == 'success') {
+            ToastAlert('Success', ALERT_TYPE.SUCCESS, 'Form submitted');
+          } else {
+            ToastAlert('Error', ALERT_TYPE.WARNING, 'Error submitting form');
+          }
         } else {
-          ToastAlert('Error', ALERT_TYPE.WARNING, 'Error submitting form');
+          ToastAlert('Error', ALERT_TYPE.WARNING, 'Fill all input fields');
         }
       }
     } catch (error) {

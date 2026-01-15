@@ -4,6 +4,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import { UserContext } from '../utils/userContext';
 import ToastAlert from '../utils/toast';
 import { ALERT_TYPE } from 'react-native-alert-notification';
+import ValidateSingle from '../utils/validation';
 
 const ContactUsPage = () => {
   const { userEmail } = useContext(UserContext);
@@ -13,38 +14,42 @@ const ContactUsPage = () => {
   const [subject, setSubject] = useState('');
   const [phone, setPhone] = useState('');
   const handleSend = async () => {
-    try {
-      const response = await fetch(
-        'https://bidderapp.auctionmethod.com/amapi/contactus',
-        {
-          method: 'POST',
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
+    if (ValidateSingle(name) && ValidateSingle(message)) {
+      try {
+        const response = await fetch(
+          'https://bidderapp.auctionmethod.com/amapi/contactus',
+          {
+            method: 'POST',
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              from: name,
+              from_email: userEmail,
+              company: company,
+              phone: phone,
+              subject: subject,
+              body: message,
+            }),
           },
-          body: JSON.stringify({
-            from: name,
-            from_email: userEmail,
-            company: company,
-            phone: phone,
-            subject: subject,
-            body: message,
-          }),
-        },
-      );
-      const json = await response.json();
-      if (json.status == 'success') {
-        ToastAlert(
-          'Success',
-          ALERT_TYPE.SUCCESS,
-          'Form submitted successfully',
         );
-      } else {
-        ToastAlert('Error', ALERT_TYPE.WARNING, 'Fail to submit form');
+        const json = await response.json();
+        if (json.status == 'success') {
+          ToastAlert(
+            'Success',
+            ALERT_TYPE.SUCCESS,
+            'Form submitted successfully',
+          );
+        } else {
+          ToastAlert('Error', ALERT_TYPE.WARNING, 'Fail to submit form');
+        }
+        console.log(json);
+      } catch (error) {
+        console.log(error);
       }
-      console.log(json);
-    } catch (error) {
-      console.log(error);
+    } else {
+      ToastAlert('Error', ALERT_TYPE.WARNING, 'Message and Name are required');
     }
   };
 
