@@ -15,6 +15,11 @@ import SettingPage from './settingPage';
 import InvoicesPage from './invoicesPage';
 import MyBidPage from './myBidPage';
 import ContactUsPage from './contactUsPage';
+import StoragePage from './storagePage';
+import AboutUsPage from './aboutUsPage';
+import MyWatchListPage from './myWatchListPage';
+import { ALERT_TYPE } from 'react-native-alert-notification';
+import ToastAlert from '../utils/toast';
 
 interface Auction {
   id: number;
@@ -87,7 +92,9 @@ const Homepage = () => {
     fetch('https://bidderapp.auctionmethod.com/amapi/auctions?limit=25')
       .then(res => res.json())
       .then(data => setAuctions(data.auctions))
-      .catch(err => console.error('Fetch error:', err));
+      .catch(() => {
+        ToastAlert('Error', ALERT_TYPE.WARNING, 'Error fetching auctions');
+      });
   }, []);
 
   return (
@@ -140,8 +147,44 @@ const Homepage = () => {
         }}
       />
       <Drawer.Screen
+        name="Watch List"
+        component={MyWatchListPage}
+        options={{
+          headerTitleStyle: {
+            fontWeight: 'bold',
+            color: '#ff4f24',
+            fontSize: 20,
+          },
+          headerTitleAlign: 'center',
+        }}
+      />
+      <Drawer.Screen
         name="Contact Us"
         component={ContactUsPage}
+        options={{
+          headerTitleStyle: {
+            fontWeight: 'bold',
+            color: '#ff4f24',
+            fontSize: 20,
+          },
+          headerTitleAlign: 'center',
+        }}
+      />
+      <Drawer.Screen
+        name="Storage"
+        component={StoragePage}
+        options={{
+          headerTitleStyle: {
+            fontWeight: 'bold',
+            color: '#ff4f24',
+            fontSize: 20,
+          },
+          headerTitleAlign: 'center',
+        }}
+      />
+      <Drawer.Screen
+        name="About us"
+        component={AboutUsPage}
         options={{
           headerTitleStyle: {
             fontWeight: 'bold',

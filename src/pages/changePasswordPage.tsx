@@ -1,11 +1,13 @@
-import { Button, StyleSheet, Text, TextInput, View } from 'react-native'
-import React, { useState } from 'react'
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import React, { useState } from 'react';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import ToastAlert from '../utils/toast';
+import { ALERT_TYPE } from 'react-native-alert-notification';
 
 const ChangePasswordPage = () => {
   const [id, setId] = useState('');
   const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
-  const [auth, setAuth] = useState('');
   const authenticate = async () => {
     try {
       const response = await fetch(
@@ -24,36 +26,64 @@ const ChangePasswordPage = () => {
         },
       );
       const json = await response.json();
-      setAuth(json.status);
+      if (json.status == 'success') {
+        ToastAlert(
+          'Success',
+          ALERT_TYPE.SUCCESS,
+          'Password change successfully',
+        );
+      } else {
+        ToastAlert('Error', ALERT_TYPE.DANGER, 'Password change fail');
+      }
     } catch (error) {
       console.log(error);
     }
   };
   return (
     <View style={styles.container}>
-      <TextInput
-        style={styles.input}
-        onChangeText={setId}
-        value={id}
-        placeholder="Id send to yuor mail"
-        placeholderTextColor={'#666'}
-      />
-      <TextInput
-        style={styles.input}
-        onChangeText={setPassword}
-        value={password}
-        placeholder="new password"
-        placeholderTextColor={'#666'}
-      />
-      <TextInput
-        style={styles.input}
-        onChangeText={setCode}
-        value={code}
-        placeholder="Code send to your mail"
-        placeholderTextColor={'#666'}
-      />
-      <Button title="Change password" onPress={authenticate} />
-      <Text>{auth}</Text>
+      <View style={styles.inputContainer}>
+        <Text style={styles.inputHeading}>Id</Text>
+        <View style={styles.inputBox}>
+          <Icon name="pin" size={24} color={'#888'} />
+          <TextInput
+            style={styles.input}
+            onChangeText={setId}
+            value={id}
+            placeholder="Id"
+            placeholderTextColor={'#666'}
+          />
+        </View>
+      </View>
+      <View style={styles.inputContainer}>
+        <Text style={styles.inputHeading}>Password</Text>
+        <View style={styles.inputBox}>
+          <Icon name="password" size={24} color={'#888'} />
+          <TextInput
+            style={styles.input}
+            onChangeText={setPassword}
+            value={password}
+            placeholder="Password"
+            placeholderTextColor={'#666'}
+          />
+        </View>
+      </View>
+      <View style={styles.inputContainer}>
+        <Text style={styles.inputHeading}>Code</Text>
+        <View style={styles.inputBox}>
+          <Icon name="key" size={24} color={'#888'} />
+          <TextInput
+            style={styles.input}
+            onChangeText={setCode}
+            value={code}
+            placeholder="Code"
+            placeholderTextColor={'#666'}
+          />
+        </View>
+      </View>
+      <Pressable onPress={authenticate} style={styles.button}>
+        <Icon name="replay" color={'#fff'} size={16} />
+        <Text style={styles.buttonText}>Change password</Text>
+      </Pressable>
     </View>
   );
 };
@@ -61,20 +91,52 @@ const ChangePasswordPage = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
     backgroundColor: '#fff',
+    gap: 10,
   },
-  input: {
-    height: 40,
-    width: '80%',
-    borderColor: 'gray',
+  inputContainer: {
+    justifyContent: 'flex-start',
+    gap: 10,
+  },
+  inputHeading: {
+    color: '#000',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  inputBox: {
+    flexDirection: 'row',
+    width: '100%',
+    borderColor: '#666',
     marginBottom: 10,
     borderWidth: 1,
     paddingHorizontal: 10,
+    paddingVertical: 5,
     color: '#000',
+    alignItems: 'center',
+    borderRadius: 5,
+  },
+  input: {
+    height: 40,
+    width: '100%',
+    paddingHorizontal: 10,
+    color: '#888',
+  },
+  button: {
+    padding: 15,
+    color: '#fff',
+    justifyContent: 'center',
+    backgroundColor: '#ff4f24',
+    borderRadius: 5,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
   },
 });
 
-export default ChangePasswordPage
+export default ChangePasswordPage;

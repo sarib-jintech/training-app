@@ -2,6 +2,8 @@ import { FlatList, StyleSheet, Text, View } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { Image } from 'react-native-elements';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { ALERT_TYPE } from 'react-native-alert-notification';
+import ToastAlert from '../utils/toast';
 
 const BidHistory = ({ route }: { route: any }) => {
   const item = route.params.item;
@@ -18,12 +20,23 @@ const BidHistory = ({ route }: { route: any }) => {
     });
   };
   useEffect(() => {
-    fetch(
-      `https://bidderapp.auctionmethod.com/amapi/auctions/bidhistory?itemid=${item.id}&auctionid=${item.auction_id}`,
-    )
-      .then(res => res.json())
-      .then(data => setAuctionItems(data.data))
-      .catch(err => console.error('Fetch error:', err));
+    const fetchBids = async () => {
+      try {
+        const res = await fetch(
+          `https://bidderapp.auctionmethod.com/amapi/auctions/bidhistory?itemid=${item.id}&auctionid=${item.auction_id}`,
+        );
+        const json = await res.json();
+        if (json.status == 'success') {
+          setAuctionItems(json?.data);
+        } else {
+          ToastAlert('Error', ALERT_TYPE.DANGER, 'Error fetching bid history');
+        }
+      } catch (err) {
+        console.log(err);
+        ToastAlert('Error', ALERT_TYPE.DANGER, 'Error fetching bid history');
+      }
+    };
+    fetchBids();
   }, []);
   return (
     <SafeAreaView style={styles.mainContainer}>
@@ -37,19 +50,27 @@ const BidHistory = ({ route }: { route: any }) => {
           <Text style={styles.infoheading}>BID AMOUNT</Text>
         </View>
         <View style={styles.line} />
-        <FlatList
-          data={auctionItems}
-          renderItem={({ item }) => (
-            <>
-              <View style={styles.row}>
-                <Text style={styles.subHeading}>{formatDate(item.time_of_bid)}</Text>
-                <Text style={styles.subHeading}>$ {item.amount}</Text>
-              </View>
-              <View style={styles.line} />
-            </>
-          )}
-          contentContainerStyle={{ paddingBottom: 20 }}
-        />
+        {auctionItems.length == 0 ? (
+          <View style={styles.noHistoryContainer}>
+            <Text style={styles.subHeadingMain}>NO HISTORY FOUND</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={auctionItems}
+            renderItem={({ item }) => (
+              <>
+                <View style={styles.row}>
+                  <Text style={styles.subHeading}>
+                    {formatDate(item.time_of_bid)}
+                  </Text>
+                  <Text style={styles.subHeading}>$ {item.amount}</Text>
+                </View>
+                <View style={styles.line} />
+              </>
+            )}
+            contentContainerStyle={{ paddingBottom: 20 }}
+          />
+        )}
       </View>
     </SafeAreaView>
   );
@@ -59,13 +80,15 @@ export default BidHistory;
 
 const styles = StyleSheet.create({
   mainContainer: {
+    flex: 1,
+    backgroundColor: '#fff',
   },
   detailContainer: {
     flexDirection: 'row',
     gap: 10,
     alignItems: 'center',
     marginHorizontal: 20,
-    marginBottom: 20
+    marginBottom: 20,
   },
   image: {
     width: 80,
@@ -77,11 +100,19 @@ const styles = StyleSheet.create({
     fontSize: 18,
     flexShrink: 1,
   },
+  subHeadingMain: {
+    color: '#094780',
+    fontSize: 24,
+  },
+  noHistoryContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    flex: 1,
+  },
   historyContainer: {
-    backgroundColor: '#fff',
+    flex: 1,
     padding: 20,
     gap: 10,
-    marginBottom: 40,
   },
   infoContainer: {
     flexDirection: 'row',
@@ -99,7 +130,7 @@ const styles = StyleSheet.create({
   },
   subHeading: {
     color: '#094780',
-    fontSize: 20
+    fontSize: 20,
   },
   line: {
     marginVertical: 10,

@@ -1,17 +1,16 @@
 import React, { useState } from 'react';
 import {
-  SafeAreaView,
   StyleSheet,
   TextInput,
-  Button,
   Text,
   View,
   Pressable,
 } from 'react-native';
+import ToastAlert from '../utils/toast';
+import { ALERT_TYPE } from 'react-native-alert-notification';
 
 const ResendEmailPage = () => {
   const [email, onChangeEmail] = useState('');
-  const [result, setResult] = useState('');
   const resendActivation = async () => {
     try {
       const response = await fetch(
@@ -28,8 +27,13 @@ const ResendEmailPage = () => {
         },
       );
       const json = await response.json();
-      setResult(json.status);
+      if(json.status=='success'){
+        ToastAlert('Success',ALERT_TYPE.SUCCESS,'Email send successfully');
+      }else{
+        ToastAlert('Error',ALERT_TYPE.WARNING,'Fail to process your request');
+      }
     } catch (error) {
+      ToastAlert('Error',ALERT_TYPE.WARNING,'Something went wrong');
       console.log(error);
     }
   };
@@ -48,7 +52,6 @@ const ResendEmailPage = () => {
             Resend
         </Text>
       </Pressable>
-      <Text>{result}</Text>
       </View>
     </View>
   );

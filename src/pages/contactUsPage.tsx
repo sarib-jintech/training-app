@@ -2,6 +2,8 @@ import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import React, { useContext, useState } from 'react';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { UserContext } from '../utils/userContext';
+import ToastAlert from '../utils/toast';
+import { ALERT_TYPE } from 'react-native-alert-notification';
 
 const ContactUsPage = () => {
   const { userEmail } = useContext(UserContext);
@@ -10,7 +12,6 @@ const ContactUsPage = () => {
   const [company, setCompany] = useState('');
   const [subject, setSubject] = useState('');
   const [phone, setPhone] = useState('');
-  const [result, setResult] = useState('');
   const handleSend = async () => {
     try {
       const response = await fetch(
@@ -32,7 +33,15 @@ const ContactUsPage = () => {
         },
       );
       const json = await response.json();
-      setResult(json.status);
+      if (json.status == 'success') {
+        ToastAlert(
+          'Success',
+          ALERT_TYPE.SUCCESS,
+          'Form submitted successfully',
+        );
+      } else {
+        ToastAlert('Error', ALERT_TYPE.WARNING, 'Fail to submit form');
+      }
       console.log(json);
     } catch (error) {
       console.log(error);
@@ -109,7 +118,7 @@ const ContactUsPage = () => {
             style={styles.inputArea}
             multiline={true}
             onChangeText={setMessage}
-            value={company}
+            value={message}
             placeholder="Enter message"
             placeholderTextColor={'#666'}
           />
@@ -119,7 +128,6 @@ const ContactUsPage = () => {
         <Text style={styles.buttonText}>Send message</Text>
         <Icon name="send" color={'#fff'} size={16} />
       </Pressable>
-      <Text style={styles.resultText}>{result}</Text>
     </View>
   );
 };
@@ -207,6 +215,6 @@ const styles = StyleSheet.create({
   },
   resultText: {
     textAlign: 'center',
-    color: 'green'
-  }
+    color: 'green',
+  },
 });

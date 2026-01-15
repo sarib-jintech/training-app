@@ -1,18 +1,20 @@
-import { View, Button, StyleSheet, Text, Pressable } from 'react-native';
-import React, { useContext, useState } from 'react';
+import { View, StyleSheet, Text, Pressable } from 'react-native';
+import React, { useContext } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { UserContext } from '../utils/userContext';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import ToastAlert from '../utils/toast';
+import { ALERT_TYPE, Dialog } from 'react-native-alert-notification';
 
 const SettingPage = () => {
-  const { userEmail,userAuthToken } = useContext(UserContext);
-  const [result, setResult] = useState('');
+  const { userEmail, userAuthToken } = useContext(UserContext);
   console.log(userEmail);
   const navigator = useNavigation<any>();
   const logout = async () => {
     try {
       const result = await fetch(
-        'https://bidderapp.auctionmethod.com/amapi/auth/logout',{
+        'https://bidderapp.auctionmethod.com/amapi/auth/logout',
+        {
           method: 'GET',
           headers: {
             Authorization: `Bearer ${userAuthToken}`,
@@ -22,13 +24,48 @@ const SettingPage = () => {
       const json = await result.json();
       if (json.status == 'success') {
         navigator.navigate('Login');
+      } else {
+        ToastAlert('Error', ALERT_TYPE.WARNING, 'Something went wrong');
       }
     } catch (error) {
       console.log(error);
+      ToastAlert('Error', ALERT_TYPE.WARNING, 'Something went wrong');
     }
+  };
+  const DeleteAccount = async () => {
+    Dialog.show({
+      type: ALERT_TYPE.DANGER,
+      title: 'Alert',
+      textBody: 'Are you sure you want to delete your account',
+      button: 'Yes, delete',
+      closeOnOverlayTap: true,
+      onPressButton: async () => {
+        try {
+          const result = await fetch(
+            'https://bidderapp.auctionmethod.com/amapi/auth/account',
+            {
+              method: 'DELETE',
+            },
+          );
+          const json = await result.json();
+          if (json.status == 'success') {
+            ToastAlert('Success', ALERT_TYPE.SUCCESS, 'Account deleted');
+            navigator.navigate('Login');
+          } else {
+            ToastAlert('Error', ALERT_TYPE.WARNING, 'Something went wrong');
+          }
+        } catch (error) {
+          console.log(error);
+          ToastAlert('Error', ALERT_TYPE.WARNING, 'Something went wrong');
+        }
+      },
+    });
   };
   const ChangePassword = () => {
     navigator.navigate('ChangePassword');
+  };
+  const UpdateInfo = () => {
+    navigator.navigate('UpdateInfo');
   };
   const resetPassword = async () => {
     try {
@@ -47,10 +84,13 @@ const SettingPage = () => {
       );
       const json = await result.json();
       if (json.status == 'success') {
-        setResult('Reset email send');
+        ToastAlert('Success', ALERT_TYPE.SUCCESS, 'Reset email send');
+      } else {
+        ToastAlert('Error', ALERT_TYPE.WARNING, 'Something went wrong');
       }
     } catch (error) {
       console.log(error);
+      ToastAlert('Error', ALERT_TYPE.WARNING, 'Something went wrong');
     }
   };
   return (
@@ -68,11 +108,14 @@ const SettingPage = () => {
           <Icon name="key" size={24} color={'#fff'} />
           <Text style={styles.buttonText}>Change Password</Text>
         </Pressable>
+        <Pressable style={styles.buttonDelete} onPress={DeleteAccount}>
+          <Icon name="delete" size={24} color={'#fff'} />
+          <Text style={styles.buttonText}>Delete account</Text>
+        </Pressable>
         <Pressable style={styles.buttonLogout} onPress={logout}>
           <Icon name="logout" size={24} color={'#094780'} />
           <Text style={styles.buttonTextLogout}>Logout</Text>
         </Pressable>
-        <Text>{result}</Text>
       </View>
     </View>
   );
@@ -124,6 +167,17 @@ const styles = StyleSheet.create({
   buttonTextLogout: {
     color: '#094780',
     fontSize: 16,
+  },
+  buttonDelete: {
+    padding: 15,
+    color: '#fff',
+    justifyContent: 'center',
+    backgroundColor: '#ff0000',
+    borderRadius: 10,
+    alignItems: 'center',
+    width: '100%',
+    flexDirection: 'row',
+    gap: 5,
   },
   heading: {
     color: '#094780',

@@ -3,6 +3,8 @@ import React, { useContext, useEffect, useState } from 'react';
 import { UserContext } from '../utils/userContext';
 import { FlatList } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import ToastAlert from '../utils/toast';
+import { ALERT_TYPE } from 'react-native-alert-notification';
 
 const BidItem: ListRenderItem<any> = ({ item }) => {
   const formatDate = (dateString: string) => {
@@ -56,16 +58,28 @@ const MyBidPage = () => {
   const { userAuthToken } = useContext(UserContext);
   useEffect(() => {
     if (!userAuthToken) return;
-
-    fetch('https://bidderapp.auctionmethod.com/amapi/user/bids?limit=25', {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${userAuthToken}`,
-      },
-    })
-      .then(res => res.json())
-      .then(data => setBids(data.items))
-      .catch(err => console.error('Fetch error:', err));
+    const fetchBids = async () => {
+      try {
+        const res = await fetch(
+          'https://bidderapp.auctionmethod.com/amapi/user/bids?limit=25',
+          {
+            method: 'GET',
+            headers: {
+              Authorization: `Bearer ${userAuthToken}`,
+            },
+          },
+        );
+        const json = await res.json();
+        if (json.status == 'success') {
+          setBids(json?.items);
+        } else {
+          ToastAlert('Error', ALERT_TYPE.WARNING, 'Error fetching bids');
+        }
+      } catch (err) {
+        ToastAlert('Error', ALERT_TYPE.DANGER, 'Something went wrong');
+      }
+    };
+    fetchBids();
   }, [userAuthToken]);
 
   //   console.log(bids);

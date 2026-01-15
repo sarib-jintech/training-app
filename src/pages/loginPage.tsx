@@ -4,13 +4,14 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import Entypo from 'react-native-vector-icons/Entypo';
 import { StyleSheet, TextInput, Text, Pressable, View } from 'react-native';
 import { UserContext } from '../utils/userContext';
+import { ALERT_TYPE } from 'react-native-alert-notification';
+import ToastAlert from '../utils/toast';
 
 const LoginPage = () => {
-  const { userEmail, setUserEmail } = useContext(UserContext);
+  const { setUserEmail } = useContext(UserContext);
   const navigation = useNavigation<any>();
   const [email, onChangeEmail] = useState('');
   const [password, onChangePassword] = useState('');
-  const [auth, setAuth] = useState('');
   const authenticate = async () => {
     try {
       const response = await fetch(
@@ -28,14 +29,20 @@ const LoginPage = () => {
         },
       );
       const json = await response.json();
-      setAuth(json.status);
       console.log(json);
-      console.log(json.token);
-      setUserEmail(email, json.token);
-      navigation.navigate('Homepage');
       if (json.status == 'success') {
-        setAuth('Login successful, Redirecting to homepage');
-        setTimeout(() => {}, 4000);
+        setUserEmail(email, json.token);
+        console.log(json.token);
+        ToastAlert(
+          'Success',
+          ALERT_TYPE.SUCCESS,
+          'Login successful, Redirecting to homepage',
+        );
+        setTimeout(() => {
+          navigation.navigate('Homepage');
+        }, 2000);
+      } else if (json.status == 'error') {
+        ToastAlert('Error', ALERT_TYPE.WARNING, 'Login failed!');
       }
     } catch (error) {
       console.log(error);
@@ -90,7 +97,6 @@ const LoginPage = () => {
           <Text style={styles.registerButton}>Create one</Text>
         </Pressable>
       </View>
-      <Text>{auth}</Text>
     </View>
   );
 };

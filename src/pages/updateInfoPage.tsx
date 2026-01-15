@@ -1,21 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import {
-  StyleSheet,
-  TextInput,
-  Text,
-  ScrollView,
-  View,
-  Switch,
-  Pressable,
-} from 'react-native';
-import { Picker } from '@react-native-picker/picker';
+import { Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native'
+import React, { useEffect, useState } from 'react'
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import ToastAlert from '../utils/toast';
-import { ALERT_TYPE } from 'react-native-alert-notification';
+import { Picker } from '@react-native-picker/picker';
 
-const RegisterPage = () => {
-  const navigation = useNavigation<any>();
+const UpdateInfoPage = () => {
+const navigation = useNavigation<any>();
   type state = {
     id: number;
     abbreviation: string;
@@ -54,6 +44,7 @@ const RegisterPage = () => {
   const [shipStates, setShipStates] = useState<state[]>([]);
   const [registerInfo, setRegisterInfo] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [result, setResult] = useState('');
   const [formData, setFormData] = useState<RegisterFormData>({
     firstname: '',
     lastname: '',
@@ -76,26 +67,15 @@ const RegisterPage = () => {
   });
 
   useEffect(() => {
-    const fetchInfo = async () => {
-      try {
-        const res = await fetch(
-          'https://bidderapp.auctionmethod.com/amapi/register/info',
-        );
-        const json = await res.json();
-        if (json.status == 'success') {
-          setRegisterInfo(json);
-          setCountries(json?.data?.countries);
-          setShipCountries(json?.data?.countries);
-          setLoading(false);
-        } else {
-          ToastAlert('Error', ALERT_TYPE.WARNING, 'Error fetching info');
-        }
-      } catch (err) {
-        console.error('Fetch error:', err);
-        ToastAlert('Error', ALERT_TYPE.WARNING, 'Error fetching info');
-      }
-    };
-    fetchInfo();
+    fetch('https://bidderapp.auctionmethod.com/amapi/register/info')
+      .then(res => res.json())
+      .then(data => {
+        setRegisterInfo(data);
+        setCountries(data.data.countries);
+        setShipCountries(data.data.countries);
+        setLoading(false);
+      })
+      .catch(err => console.error('Fetch error:', err));
   }, []);
 
   const handleInputChange = (
@@ -117,14 +97,14 @@ const RegisterPage = () => {
         },
       );
       const json = await response.json();
-      if (json.status == 'success') {
-        ToastAlert('Error', ALERT_TYPE.WARNING, 'User with same email exist');
+      if (JSON.stringify(json.status) == 'success') {
+        setResult('User with same email exist');
         return false;
       } else {
         return true;
       }
     } catch (error) {
-      ToastAlert('Error', ALERT_TYPE.WARNING, 'Registration Failed');
+      setResult('Registration Failed');
       return false;
     }
   }
@@ -140,14 +120,10 @@ const RegisterPage = () => {
           },
         );
         const json = await response.json();
-        if (json.status == 'success') {
-          ToastAlert('Success', ALERT_TYPE.SUCCESS, 'Form submitted');
-        } else {
-          ToastAlert('Error', ALERT_TYPE.WARNING, 'Error submitting form');
-        }
+        setResult(JSON.stringify(json));
       }
     } catch (error) {
-      ToastAlert('Error', ALERT_TYPE.WARNING, 'Registration Failed');
+      setResult('Registration Failed');
     }
   };
   const handleResendEmail = () => {
@@ -440,6 +416,7 @@ const RegisterPage = () => {
             <Text style={styles.buttonText}>Resend activation email</Text>
           </Pressable>
         </View>
+        <Text style={styles.resultText}>{result}</Text>
       </ScrollView>
     </View>
   );
@@ -566,5 +543,4 @@ const styles = StyleSheet.create({
     gap: 10,
   },
 });
-
-export default RegisterPage;
+export default UpdateInfoPage

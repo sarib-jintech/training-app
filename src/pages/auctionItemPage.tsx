@@ -1,12 +1,9 @@
-import {
-  FlatList,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { FlatList, StyleSheet, Text, View } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { RouteProp } from '@react-navigation/native';
 import AuctionItemCard from '../utils/auctionItemCard';
+import { ALERT_TYPE } from 'react-native-alert-notification';
+import ToastAlert from '../utils/toast';
 
 type AuctionItemRouteProp = RouteProp<
   {
@@ -17,12 +14,23 @@ type AuctionItemRouteProp = RouteProp<
 const AuctionItemPage = ({ route }: { route: AuctionItemRouteProp }) => {
   const [auctionItems, setAuctionItems] = useState<any[]>([]);
   useEffect(() => {
-    fetch(
-      `https://bidderapp.auctionmethod.com/amapi/auctions/items?limit=25&offset=0&sort=end_date&sort_direction=ascending&hideclosed=1&auctionid=${route.params.auctionId}`,
-    )
-      .then(res => res.json())
-      .then(data => setAuctionItems(data.auction.items))
-      .catch(err => console.error('Fetch error:', err));
+    const fetchAuctionItems = async () => {
+      try {
+        const res = await fetch(
+          `https://bidderapp.auctionmethod.com/amapi/auctions/items?limit=25&hideclosed=1&auctionid=${route.params.auctionId}`,
+        );
+        const json = await res.json();
+        if (json.status == 'success') {
+          setAuctionItems(json?.auction?.items);
+        } else {
+          ToastAlert('Error', ALERT_TYPE.WARNING, 'Error fetching items');
+        }
+      } catch (err) {
+        console.log(err);
+        ToastAlert('Error', ALERT_TYPE.WARNING, 'Error fetching items');
+      }
+    };
+    fetchAuctionItems();
   }, []);
 
   return (

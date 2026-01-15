@@ -3,6 +3,8 @@ import React, { useContext, useEffect, useState } from 'react';
 import { UserContext } from '../utils/userContext';
 import { FlatList } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import ToastAlert from '../utils/toast';
+import { ALERT_TYPE } from 'react-native-alert-notification';
 
 const InvoicesPage = () => {
   const [invoices, setInvoices] = useState<any>([]);
@@ -16,36 +18,56 @@ const InvoicesPage = () => {
       year: 'numeric',
     });
   };
-    useEffect(() => {
-      fetch(
-        'https://bidderapp.auctionmethod.com/amapi/user/invoices?limit=25',
-        {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${userAuthToken}`,
+  useEffect(() => {
+    const fetchInvoices = async () => {
+      try {
+        const result = await fetch(
+          'https://bidderapp.auctionmethod.com/amapi/user/invoices?limit=25',
+          {
+            method: 'GET',
+            headers: {
+              Authorization: `Bearer ${userAuthToken}`,
+            },
           },
-        },
-      )
-        .then(res => res.json())
-        .then(data => setInvoices(data.data))
-        .catch(err => console.error('Fetch error:', err));
-    }, []);
-//   console.log(invoices);
-//   useEffect(() => {
-//     const invoiceList = [
-//       {
-//         id: 2,
-//         auction_id: 9,
-//         title: 'checking',
-//         created: '2024-07-01T01:00:00-0400',
-//         item_count: 5,
-//         sub_total: 75,
-//         paid: false,
-//       },
-//     ];
+        );
 
-//     setInvoices(invoiceList);
-//   }, []);
+        const json = await result.json();
+
+        if (json.status == 'success') {
+          ToastAlert(
+            'Success',
+            ALERT_TYPE.SUCCESS,
+            'Invoices fetched successfully',
+          );
+          setInvoices(json?.data);
+        } else {
+          ToastAlert('Error', ALERT_TYPE.WARNING, 'Invoices fetch failed');
+        }
+      } catch (err) {
+        console.error('Fetch error:', err);
+        ToastAlert('Error', ALERT_TYPE.DANGER, 'Something went wrong');
+      }
+    };
+
+    fetchInvoices();
+  }, []);
+
+  //   console.log(invoices);
+  //   useEffect(() => {
+  //     const invoiceList = [
+  //       {
+  //         id: 2,
+  //         auction_id: 9,
+  //         title: 'checking',
+  //         created: '2024-07-01T01:00:00-0400',
+  //         item_count: 5,
+  //         sub_total: 75,
+  //         paid: false,
+  //       },
+  //     ];
+
+  //     setInvoices(invoiceList);
+  //   }, []);
 
   return (
     <View style={styles.mainContainer}>
@@ -73,7 +95,9 @@ const InvoicesPage = () => {
                   )}
                   <View style={styles.infoContainer}>
                     <Text style={styles.title}>{item.title}</Text>
-                    <Text style={styles.description}>{formatDate(item.created)}</Text>
+                    <Text style={styles.description}>
+                      {formatDate(item.created)}
+                    </Text>
                   </View>
                   <View style={styles.amountContainer}>
                     <Text style={styles.amountText}>${item.sub_total}</Text>
@@ -187,7 +211,7 @@ const styles = StyleSheet.create({
   },
   payButtonContainer: {
     justifyContent: 'space-between',
-    flexDirection: 'row'
+    flexDirection: 'row',
   },
   primaryHeading: {
     fontSize: 16,

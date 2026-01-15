@@ -17,6 +17,7 @@ import ChangePasswordPage from './src/pages/changePasswordPage';
 import BidHistory from './src/pages/bidHistory';
 import InvoicesPage from './src/pages/invoicesPage';
 import MyBidPage from './src/pages/myBidPage';
+import { AlertNotificationRoot } from 'react-native-alert-notification';
 
 const RootStack = createNativeStackNavigator({
   screens: {
@@ -24,23 +25,23 @@ const RootStack = createNativeStackNavigator({
       screen: LoginPage,
       options: {
         headerShown: false,
-      }
+      },
     },
     Register: {
       screen: RegisterPage,
       options: {
-        headerTitle: "",
+        headerTitle: '',
         headerShadowVisible: false,
         headerTintColor: '#094780',
-      }
+      },
     },
     ResendEmail: {
       screen: ResendEmailPage,
       options: {
-        headerTitle: "Resend Activation Email",
+        headerTitle: 'Resend Activation Email',
         headerShadowVisible: false,
         headerTintColor: '#094780',
-      }
+      },
     },
     Homepage: {
       screen: Homepage,
@@ -52,29 +53,29 @@ const RootStack = createNativeStackNavigator({
       screen: AuctionItemPage,
       options: {
         headerTintColor: '#094780',
-        title: "Auction Item"
-      }
+        title: 'Auction Item',
+      },
     },
     BidHistory: {
       screen: BidHistory,
       options: {
         headerTintColor: '#094780',
-        title: "Bid History"
-      }
+        title: 'Bid History',
+      },
     },
     InvoicesPage: {
       screen: InvoicesPage,
       options: {
         headerTintColor: '#094780',
-        title: "My Invoices"
-      }
+        title: 'My Invoices',
+      },
     },
     MyBidPage: {
       screen: MyBidPage,
       options: {
         headerTintColor: '#094780',
-        title: "My Bids"
-      }
+        title: 'My Bids',
+      },
     },
     ChangePassword: {
       screen: ChangePasswordPage,
@@ -86,7 +87,9 @@ const App = () => {
   return (
     <SafeAreaProvider>
       <UserProvider>
+        <AlertNotificationRoot>
           <Navigation />
+        </AlertNotificationRoot>
       </UserProvider>
     </SafeAreaProvider>
   );

@@ -13,7 +13,7 @@ import { UserContext } from './userContext';
 import { ALERT_TYPE } from 'react-native-alert-notification';
 import ToastAlert from './toast';
 
-const AuctionItemCard = ({ item }: { item: any }) => {
+const WatchlistItemCard = ({ item }: { item: any }) => {
   const navigator = useNavigation<any>();
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -27,8 +27,7 @@ const AuctionItemCard = ({ item }: { item: any }) => {
     });
   };
   const { userAuthToken } = useContext(UserContext);
-  const [bid, setBid] = useState('');
-  const [favorite, setFavorite] = useState(false);
+  const [favorite, setFavorite] = useState(true);
   const handleFavorite = async () => {
     try {
       const response = await fetch(
@@ -93,35 +92,6 @@ const AuctionItemCard = ({ item }: { item: any }) => {
       console.log(error);
     }
   };
-  const handleBid = async () => {
-    try {
-      const response = await fetch(
-        'https://bidderapp.auctionmethod.com/amapi/auctions/bids',
-        {
-          method: 'POST',
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            auctionid: item.auction_id,
-            itemid: item.id,
-            amount: parseFloat(bid),
-            terms_agreed: true,
-          }),
-        },
-      );
-      const json = await response.json();
-      if (json.status == 'success') {
-        ToastAlert('Success', ALERT_TYPE.SUCCESS, 'Bid added successfully');
-        setFavorite(false);
-      } else {
-        ToastAlert('Error', ALERT_TYPE.WARNING, 'Fail to add bid');
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
   return (
     <View style={styles.card}>
       <View style={styles.imageWrapper}>
@@ -178,23 +148,11 @@ const AuctionItemCard = ({ item }: { item: any }) => {
           <Text style={styles.itemBid}>${item.current_bid}</Text>
         </View>
       </View>
-      <View style={styles.bidButtonContainer}>
-        <TextInput
-          style={styles.bidInput}
-          placeholder="Enter your bid"
-          placeholderTextColor={'#666'}
-          onChangeText={setBid}
-          value={bid}
-        />
-        <Pressable onPress={handleBid} style={styles.buttonBid}>
-          <Text style={styles.buttonText}>Bid now</Text>
-        </Pressable>
-      </View>
     </View>
   );
 };
 
-export default AuctionItemCard;
+export default WatchlistItemCard;
 
 const styles = StyleSheet.create({
   card: {
