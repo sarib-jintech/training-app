@@ -1,11 +1,21 @@
-import { Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
+import React, { useContext, useEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { Picker } from '@react-native-picker/picker';
+import { UserContext } from '../utils/userContext';
+import ToastAlert from '../utils/toast';
+import { ALERT_TYPE } from 'react-native-alert-notification';
 
 const UpdateInfoPage = () => {
-const navigation = useNavigation<any>();
+  const navigation = useNavigation<any>();
   type state = {
     id: number;
     abbreviation: string;
@@ -19,63 +29,81 @@ const navigation = useNavigation<any>();
     states: state[];
   };
   type RegisterFormData = {
-    firstname: string;
-    lastname: string;
     email: string;
-    password: string;
+    company_name: string;
     user_name: string;
     phone: string;
     country_id: number;
     state_id: number;
     address: string;
     city: string;
-    zip: string;
-    ship_country: number;
-    ship_state: number;
-    ship_address: string;
-    ship_city: string;
-    ship_zip: string;
-    ship_residential: number;
-    accept_terms: boolean;
   };
+  const { userAuthToken } = useContext(UserContext);
   const [countries, setCountries] = useState<country[]>([]);
   const [states, setStates] = useState<state[]>([]);
-  const [shipCountries, setShipCountries] = useState<country[]>([]);
-  const [shipStates, setShipStates] = useState<state[]>([]);
-  const [registerInfo, setRegisterInfo] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [result, setResult] = useState('');
   const [formData, setFormData] = useState<RegisterFormData>({
-    firstname: '',
-    lastname: '',
+    company_name: '',
+    address: '',
+    city: '',
     email: '',
-    password: '',
     user_name: '',
     phone: '',
     country_id: 0,
-    address: '',
-    city: '',
     state_id: 0,
-    zip: '',
-    accept_terms: false,
-    ship_address: '',
-    ship_city: '',
-    ship_state: 0,
-    ship_zip: '',
-    ship_country: 0,
-    ship_residential: 0,
   });
 
   useEffect(() => {
-    fetch('https://bidderapp.auctionmethod.com/amapi/register/info')
-      .then(res => res.json())
-      .then(data => {
-        setRegisterInfo(data);
-        setCountries(data.data.countries);
-        setShipCountries(data.data.countries);
-        setLoading(false);
-      })
-      .catch(err => console.error('Fetch error:', err));
+    const fetchUserData = async () => {
+      try {
+        const res = await fetch(
+          'https://bidderapp.auctionmethod.com/amapi/user',
+          {
+            method: 'GET',
+            headers: {
+              Authorization: `Bearer ${userAuthToken}`,
+            },
+          },
+        );
+        const json = await res.json();
+        if (json.status == 'success') {
+          console.log(json);
+          const user = json.data;
+
+          setFormData({
+            email: user.email ?? '',
+            company_name: user.company_name ?? '',
+            user_name: user.user_name ?? '',
+            phone: user.phone ?? '',
+            country_id: user.country_id ?? 0,
+            state_id: user.state_id ?? 0,
+            address: user.address ?? '',
+            city: user.city ?? '',
+          });
+          const infoRes = await fetch(
+            'https://bidderapp.auctionmethod.com/amapi/register/info',
+          );
+          const infoJson = await infoRes.json();
+          if (infoJson.status == 'success') {
+            setCountries(infoJson?.data?.countries);
+            const selectedCountry = infoJson?.data?.countries.find(
+              (c: country) => c.id === user.country_id,
+            );
+            setStates(selectedCountry?.states || []);
+          } else {
+            ToastAlert(
+              'Error',
+              ALERT_TYPE.WARNING,
+              'Error fetching inputs data',
+            );
+          }
+        } else {
+          ToastAlert('Error', ALERT_TYPE.WARNING, 'Error fetching your info');
+        }
+      } catch (err) {
+        ToastAlert('Error', ALERT_TYPE.WARNING, 'Something went wrong');
+      }
+    };
+    fetchUserData();
   }, []);
 
   const handleInputChange = (
@@ -84,59 +112,36 @@ const navigation = useNavigation<any>();
   ) => {
     setFormData({ ...formData, [name]: value });
   };
-  async function checkEmail(email: String) {
+
+  const updateBidder = async () => {
     try {
       const response = await fetch(
-        'https://bidderapp.auctionmethod.com/amapi/register/checkemail',
+        'https://bidderapp.auctionmethod.com/amapi/user',
         {
-          method: 'POST',
+          method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: email,
-          }),
+          body: JSON.stringify(formData),
         },
       );
       const json = await response.json();
-      if (JSON.stringify(json.status) == 'success') {
-        setResult('User with same email exist');
-        return false;
+      console.log(json);
+      if (json.status == 'success') {
+        ToastAlert('Success', ALERT_TYPE.SUCCESS, 'Info updated successfully');
       } else {
-        return true;
+        ToastAlert('Error', ALERT_TYPE.WARNING, 'Error updating info');
       }
     } catch (error) {
-      setResult('Registration Failed');
-      return false;
+      ToastAlert('Error', ALERT_TYPE.WARNING, 'Something went wrong');
     }
-  }
-  const registerBidder = async () => {
-    try {
-      if (await checkEmail(formData.email)) {
-        const response = await fetch(
-          'https://bidderapp.auctionmethod.com/amapi/register',
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(formData),
-          },
-        );
-        const json = await response.json();
-        setResult(JSON.stringify(json));
-      }
-    } catch (error) {
-      setResult('Registration Failed');
-    }
-  };
-  const handleResendEmail = () => {
-    navigation.navigate('ResendEmail');
   };
 
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.headings}>
-          <Text style={styles.heading}>Create Account</Text>
+          <Text style={styles.heading}>Update Info</Text>
           <Text style={styles.subHeading}>
-            Sign up to start bidding and managing auctions.
+            Update your accounts info from below
           </Text>
         </View>
         <View style={styles.sections}>
@@ -145,64 +150,34 @@ const navigation = useNavigation<any>();
             <Text style={styles.iconHeading}>Personal Info</Text>
           </View>
           <View style={styles.line} />
-          <View style={styles.rowInput}>
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputHeading}>First name</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="First Name"
-                placeholderTextColor={'#666'}
-                onChangeText={v => handleInputChange('firstname', v)}
-              />
-            </View>
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputHeading}>Last name</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Last Name"
-                placeholderTextColor={'#666'}
-                onChangeText={v => handleInputChange('lastname', v)}
-              />
-            </View>
-          </View>
           <View style={styles.inputContainer}>
             <Text style={styles.inputHeading}>Username</Text>
             <TextInput
               style={styles.input}
+              value={formData.user_name}
               placeholder="Username"
               placeholderTextColor={'#666'}
               onChangeText={v => handleInputChange('user_name', v)}
             />
           </View>
-
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputHeading}>Email</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Email"
-              placeholderTextColor={'#666'}
-              onChangeText={v => handleInputChange('email', v)}
-            />
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputHeading}>Password</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Password"
-              secureTextEntry
-              placeholderTextColor={'#666'}
-              onChangeText={v => handleInputChange('password', v)}
-            />
-          </View>
-
           <View style={styles.inputContainer}>
             <Text style={styles.inputHeading}>Phone</Text>
             <TextInput
               style={styles.input}
+              value={formData.phone}
               placeholder="Phone"
               placeholderTextColor={'#666'}
               onChangeText={v => handleInputChange('phone', v)}
+            />
+          </View>
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputHeading}>Company name</Text>
+            <TextInput
+              style={styles.input}
+              value={formData.company_name}
+              placeholder="Company name"
+              placeholderTextColor={'#666'}
+              onChangeText={v => handleInputChange('company_name', v)}
             />
           </View>
         </View>
@@ -277,6 +252,7 @@ const navigation = useNavigation<any>();
             <TextInput
               style={styles.input}
               placeholder="Address"
+              value={formData.address}
               placeholderTextColor={'#666'}
               onChangeText={v => handleInputChange('address', v)}
             />
@@ -286,137 +262,19 @@ const navigation = useNavigation<any>();
               <Text style={styles.inputHeading}>City</Text>
               <TextInput
                 style={styles.input}
+                value={formData.city}
                 placeholder="City"
                 placeholderTextColor={'#666'}
                 onChangeText={v => handleInputChange('city', v)}
               />
             </View>
-
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputHeading}>Zip code</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Zip Code"
-                placeholderTextColor={'#666'}
-                onChangeText={v => handleInputChange('zip', v)}
-              />
-            </View>
           </View>
-        </View>
-        <View style={styles.sections}>
-          <View style={styles.iconHeadingContainer}>
-            <Icon name="outbox" size={28} color={'#094780'} />
-            <Text style={styles.iconHeading}>Shipping Address</Text>
-          </View>
-          <View style={styles.line} />
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputHeading}>Ship country</Text>
-            <View style={styles.pickerContainer}>
-              <Picker
-                selectionColor={'#666'}
-                selectedValue={formData.ship_country}
-                onValueChange={(v: any) => {
-                  handleInputChange('ship_country', v);
-                  const selectedCountry = shipCountries.find(c => c.id == v);
-                  setShipStates(selectedCountry?.states || []);
-                }}
-              >
-                <Picker.Item
-                  label="Select ship country"
-                  value=""
-                  color="#666"
-                  style={{ fontSize: 14 }}
-                />
-                {shipCountries?.map((c: any) => (
-                  <Picker.Item
-                    key={c.id}
-                    label={c.name}
-                    value={c.id}
-                    color="#666"
-                    style={{ fontSize: 14 }}
-                  />
-                ))}
-              </Picker>
-            </View>
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputHeading}>Ship state</Text>
-            <View style={styles.pickerContainer}>
-              <Picker
-                selectionColor={'#666'}
-                selectedValue={formData.ship_state}
-                onValueChange={(v: any) => {
-                  handleInputChange('ship_state', v);
-                }}
-              >
-                <Picker.Item
-                  label="Select ship state"
-                  value=""
-                  color="#666"
-                  style={{ fontSize: 14 }}
-                />
-                {shipStates?.map((c: any) => (
-                  <Picker.Item
-                    key={c.id}
-                    label={c.name}
-                    value={c.id}
-                    color="#666"
-                    style={{ fontSize: 14 }}
-                  />
-                ))}
-              </Picker>
-            </View>
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputHeading}>Ship address</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Ship address"
-              placeholderTextColor={'#666'}
-              onChangeText={v => handleInputChange('ship_address', v)}
-            />
-          </View>
-          <View style={styles.rowInput}>
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputHeading}>Ship city</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Ship city"
-                placeholderTextColor={'#666'}
-                onChangeText={v => handleInputChange('ship_city', v)}
-              />
-            </View>
-
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputHeading}>Ship zip code</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Ship zip Code"
-                placeholderTextColor={'#666'}
-                onChangeText={v => handleInputChange('ship_zip', v)}
-              />
-            </View>
-          </View>
-        </View>
-        <View style={styles.row}>
-          <Text>Accept Terms & Conditions</Text>
-          <Switch
-            value={formData.accept_terms}
-            onValueChange={v => handleInputChange('accept_terms', v)}
-          />
         </View>
         <View style={styles.buttons}>
-          <Pressable style={styles.button} onPress={registerBidder}>
-            <Text style={styles.buttonText}>Register</Text>
-          </Pressable>
-          <Text>or</Text>
-          <Pressable onPress={handleResendEmail} style={styles.buttonSecondary}>
-            <Text style={styles.buttonText}>Resend activation email</Text>
+          <Pressable style={styles.button} onPress={updateBidder}>
+            <Text style={styles.buttonText}>Update Info</Text>
           </Pressable>
         </View>
-        <Text style={styles.resultText}>{result}</Text>
       </ScrollView>
     </View>
   );
@@ -426,6 +284,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+    paddingVertical: 20,
   },
   scrollContainer: {
     paddingHorizontal: 20,
@@ -543,4 +402,4 @@ const styles = StyleSheet.create({
     gap: 10,
   },
 });
-export default UpdateInfoPage
+export default UpdateInfoPage;

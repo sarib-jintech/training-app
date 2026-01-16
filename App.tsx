@@ -18,6 +18,7 @@ import BidHistory from './src/pages/bidHistory';
 import InvoicesPage from './src/pages/invoicesPage';
 import MyBidPage from './src/pages/myBidPage';
 import { AlertNotificationRoot } from 'react-native-alert-notification';
+import UpdateInfoPage from './src/pages/updateInfoPage';
 
 const RootStack = createNativeStackNavigator({
   screens: {
@@ -79,7 +80,18 @@ const RootStack = createNativeStackNavigator({
     },
     ChangePassword: {
       screen: ChangePasswordPage,
+      options: {
+        headerTintColor: '#094780',
+        title: 'Change Password',
+      },
     },
+    UpdateInfo: {
+      screen: UpdateInfoPage,
+      options: {
+        headerTintColor: '#094780',
+        title: 'Update Info',
+      },
+    }
   },
 });
 const Navigation = createStaticNavigation(RootStack);

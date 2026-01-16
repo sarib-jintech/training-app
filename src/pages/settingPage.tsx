@@ -113,6 +113,10 @@ const SettingPage = () => {
           <Icon name="key" size={24} color={'#fff'} />
           <Text style={styles.buttonText}>Change Password</Text>
         </Pressable>
+        <Pressable style={styles.buttonSecondary} onPress={UpdateInfo}>
+          <Icon name="edit" size={24} color={'#fff'} />
+          <Text style={styles.buttonText}>Update Info</Text>
+        </Pressable>
         <Pressable style={styles.buttonDelete} onPress={DeleteAccount}>
           <Icon name="delete" size={24} color={'#fff'} />
           <Text style={styles.buttonText}>Delete account</Text>
