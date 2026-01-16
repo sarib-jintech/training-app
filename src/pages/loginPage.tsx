@@ -1,5 +1,5 @@
 import { useNavigation } from '@react-navigation/native';
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Entypo from 'react-native-vector-icons/Entypo';
 import { StyleSheet, TextInput, Text, Pressable, View } from 'react-native';
@@ -9,10 +9,47 @@ import ToastAlert from '../utils/toast';
 import ValidateSingle from '../utils/validation';
 
 const LoginPage = () => {
-  const { setUserEmail } = useContext(UserContext);
+  const { userAuthToken, setUserEmail } = useContext(UserContext);
   const navigation = useNavigation<any>();
   const [email, onChangeEmail] = useState('');
   const [password, onChangePassword] = useState('');
+  useEffect(() => {
+    console.log(userAuthToken);
+    const checkToken = async () => {
+      try {
+        const res = await fetch(
+          `https://bidderapp.auctionmethod.com/amapi/auth/check`,
+          {
+            method: 'GET',
+            headers: {
+              Authorization: `Bearer ${userAuthToken}`,
+            },
+          },
+        );
+        const json = await res.json();
+        console.log(json);
+        if (json.status == 'success') {
+          ToastAlert(
+            'Success',
+            ALERT_TYPE.SUCCESS,
+            'Already Logged In, Redirecting to homepage',
+          );
+          setTimeout(() => {
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'Homepage' }],
+            });
+          }, 2000);
+        }
+      } catch (err) {
+        console.log(err);
+      }
+    };
+    if (!userAuthToken) return;
+    if (userAuthToken != '') {
+      checkToken();
+    }
+  }, []);
   const authenticate = async () => {
     if (ValidateSingle(email) && ValidateSingle(password)) {
       try {

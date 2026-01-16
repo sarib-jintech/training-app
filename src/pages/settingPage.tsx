@@ -7,7 +7,7 @@ import ToastAlert from '../utils/toast';
 import { ALERT_TYPE, Dialog } from 'react-native-alert-notification';
 
 const SettingPage = () => {
-  const { userEmail, userAuthToken } = useContext(UserContext);
+  const { userEmail, userAuthToken, setUserEmail } = useContext(UserContext);
   console.log(userEmail);
   const navigator = useNavigation<any>();
   const logout = async () => {
@@ -23,7 +23,12 @@ const SettingPage = () => {
       );
       const json = await result.json();
       if (json.status == 'success') {
-        navigator.navigate('Login');
+        ToastAlert('Success', ALERT_TYPE.SUCCESS, 'Log out successfully, redirecting to login');
+        setUserEmail('','');
+        navigator.reset({
+          index: 0,
+          routes: [{ name: 'Login' }],
+        });
       } else {
         ToastAlert('Error', ALERT_TYPE.WARNING, 'Something went wrong');
       }
